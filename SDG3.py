@@ -7,16 +7,16 @@ from google.generativeai import GenerativeModel
 import math
 
 # Configuration - EDIT THESE VALUES
-INPUT_CSV = "customer_data.csv"  # Path to your input CSV file
-OUTPUT_CSV = "synthetic_data.csv"  # Path for the output synthetic data
-NUM_ROWS = 100  # Number of synthetic rows to generate
-BATCH_SIZE = 5  # Number of columns to process in each API call
+INPUT_CSV = "customer_data.csv"  # input CSV file path
+OUTPUT_CSV = "synthetic_data.csv"  # output synthetic data path
+NUM_ROWS = 100  # Num rows to generate
+BATCH_SIZE = 5  # Num columns to process in each API call
 
-# Proxy and API configuration
+# Proxy and API config
 os.environ["HTTP_PROXY"] = "http://dc2-proxyuat.seauat.com.vn:8080"
 os.environ["HTTPS_PROXY"] = "http://dc2-proxyuat.seauat.com.vn:8080"
 
-# Configure Gemini API
+# Config Gemini API
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable not set.")
@@ -25,19 +25,13 @@ model = genai.GenerativeModel("gemini-2.0-flash")
 
 
 def read_csv_and_generate_schema(csv_file_path):
-    """
-    Read a CSV file and generate a basic schema with data types and basic statistics.
-    """
     try:
-        # Read CSV file
         df = pd.read_csv(csv_file_path)
         
-        # Check if DataFrame is empty
         if df.empty:
             print("Warning: CSV file is empty")
             return {}
         
-        # Initialize schema dictionary
         schema = {}
         
         # For each column, extract data type and basic statistics
@@ -47,20 +41,18 @@ def read_csv_and_generate_schema(csv_file_path):
             # Calculate number of non-null values for sampling
             non_null_count = col_data.count()
             
-            # Initialize sample values list
             sample_values = []
             
             # Only attempt to get sample values if there are non-null values
             if non_null_count > 0:
-                # Get a sample of non-null values (up to 5)
+                # Get a sample of non-null values
                 sample_size = min(5, non_null_count)
                 sample_values = col_data.dropna().sample(sample_size).tolist() if sample_size > 0 else []
             
-            # Determine the data type
+
             if pd.api.types.is_numeric_dtype(col_data):
                 data_type = "integer" if col_data.dropna().apply(lambda x: float(x).is_integer()).all() else "float"
                 
-                # Get statistics for numeric columns (with null checks)
                 stats = {}
                 if non_null_count > 0:
                     stats = {
@@ -111,6 +103,47 @@ def read_csv_and_generate_schema(csv_file_path):
     except Exception as e:
         print(f"Error generating schema: {str(e)}")
         return None
+
+def enhance_schema_batch_alternative(schema_batch):
+    try:
+        model = genai.GenerativeModel(model_name="gemini-2.0-flash")
+        
+        prompt = f"""
+        Enhance the schema of these columns from a Vietnamese banking dataset:
+        {json.dumps(schema_batch, indent=2)}
+        
+        Please enhance this schema with your knowledge of financial data patterns and typical constraints or relationships.
+        
+        For each column, add:
+        1. A description field with a detailed description
+        2. A domain field with realistic ranges for values
+        3. A constraints field with patterns to maintain
+        4. A relationships field describing correlations to other columns
+        
+        Return your response as valid JSON matching the original structure with these additional fields.
+        Make sure the response is valid JSON and maintains the original structure exactly.
+        """
+        
+        response = model.generate_content(prompt)
+        
+        # Parse the response to extract JSON
+        response_text = response.text
+        # Find JSON in the response
+        if "```json" in response_text:
+            json_text = response_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in response_text:
+            json_text = response_text.split("```")[1].strip()
+        else:
+            json_text = response_text
+            
+        enhanced_batch = json.loads(json_text)
+        
+        return enhanced_batch
+            
+    except Exception as e:
+        print(f"Error in alternative enhancement approach: {str(e)}")
+        # Return original schema batch if enhancement fails
+        return schema_batch
 
 def enhance_schema_batch(schema_batch):
     """
@@ -184,17 +217,21 @@ def enhance_schema_batch(schema_batch):
         4. A relationships field describing correlations to other columns
         """
         
-        # Generate the structured response
-        response = structured_model.generate_content(
-            prompt,
-            generation_config={"response_schema": structured_schema}
-        )
-        
-        # Parse the response
-        enhanced_batch = response.candidates[0].content.parts[0].text
-        enhanced_batch = json.loads(enhanced_batch)
-        
-        return enhanced_batch
+        try:
+            # Generate the structured response
+            response = structured_model.generate_content(
+                prompt,
+                generation_config={"response_schema": structured_schema}
+            )
+            
+            # Parse the response
+            enhanced_batch = response.candidates[0].content.parts[0].text
+            enhanced_batch = json.loads(enhanced_batch)
+            
+            return enhanced_batch
+        except Exception as e:
+            print(f"Structured output failed: {str(e)}. Trying alternative approach...")
+            return enhance_schema_batch_alternative(schema_batch)
             
     except Exception as e:
         print(f"Error enhancing schema batch: {str(e)}")
@@ -229,10 +266,20 @@ def enhance_schema_with_gemini(schema):
             schema_batch = {col: schema[col] for col in batch_columns}
             
             # Enhance this batch
-            enhanced_batch = enhance_schema_batch(schema_batch)
-            
-            # Add the enhanced batch to the complete schema
-            enhanced_schema.update(enhanced_batch)
+            try:
+                enhanced_batch = enhance_schema_batch(schema_batch)
+                
+                # Verify that enhanced_batch is a dictionary before updating
+                if not isinstance(enhanced_batch, dict):
+                    print(f"Warning: Received non-dictionary result for batch {i+1}. Using original schema for this batch.")
+                    enhanced_batch = schema_batch
+                    
+                # Add the enhanced batch to the complete schema
+                enhanced_schema.update(enhanced_batch)
+            except Exception as batch_error:
+                print(f"Error processing batch {i+1}: {str(batch_error)}")
+                print("Using original schema for this batch.")
+                enhanced_schema.update(schema_batch)
         
         return enhanced_schema
     

@@ -1,0 +1,1160 @@
+{
+  "DAYID": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 1,
+      "categories": [
+        "2025-03-25"
+      ]
+    },
+    "null_count": 0,
+    "sample_values": [
+      "2025-03-25",
+      "2025-03-25",
+      "2025-03-25",
+      "2025-03-25",
+      "2025-03-25"
+    ]
+  },
+  "CONTRACT": {
+    "data_type": "string",
+    "stats": {
+      "unique_values_count": 10000,
+      "max_length": 13
+    },
+    "null_count": 0,
+    "sample_values": [
+      "000045720871",
+      "000049919359",
+      "000048120691",
+      "000049720481",
+      "000042018827"
+    ]
+  },
+  "DATASOURCE": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 3,
+      "categories": [
+        "AZ",
+        "LD",
+        "MM"
+      ]
+    },
+    "null_count": 3,
+    "sample_values": [
+      "AZ",
+      "AZ",
+      "AZ",
+      "AZ",
+      "AZ"
+    ]
+  },
+  "CHANNEL_NAME": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 4,
+      "categories": [
+        "ARCIB",
+        "BRANCH",
+        "SEANET",
+        "PHOIAO"
+      ]
+    },
+    "null_count": 83,
+    "sample_values": [
+      "BRANCH",
+      "BRANCH",
+      "BRANCH",
+      "BRANCH",
+      "BRANCH"
+    ]
+  },
+  "CO_CODE": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 99,
+      "top_categories": [
+        "VN0010002",
+        "VN0010101",
+        "VN0010011",
+        "VN0010081",
+        "VN0010102",
+        "VN0010003",
+        "VN0010071",
+        "VN0010004",
+        "VN0010301",
+        "VN0010024"
+      ]
+    },
+    "null_count": 0,
+    "sample_values": [
+      "VN0010101",
+      "VN0010101",
+      "VN0010080",
+      "VN0010002",
+      "VN0010132"
+    ]
+  },
+  "CATEGORY": {
+    "data_type": "integer",
+    "stats": {
+      "min": 6015.0,
+      "max": 21034.0,
+      "mean": 6638.7625,
+      "unique_values_count": 17
+    },
+    "null_count": 0,
+    "sample_values": [
+      6515,
+      6515,
+      6515,
+      6515,
+      6515
+    ]
+  },
+  "CUSTOMER": {
+    "data_type": "integer",
+    "stats": {
+      "min": 478.0,
+      "max": 99888888.0,
+      "mean": 17219633.9177,
+      "unique_values_count": 1149
+    },
+    "null_count": 0,
+    "sample_values": [
+      88888868,
+      13238888,
+      13923966,
+      14485226,
+      30000052
+    ]
+  },
+  "PRODUCT_CODE": {
+    "data_type": "integer",
+    "stats": {
+      "min": 700.0,
+      "max": 9121.0,
+      "mean": 1076.2685,
+      "unique_values_count": 24
+    },
+    "null_count": 0,
+    "sample_values": [
+      701,
+      723,
+      701,
+      701,
+      701
+    ]
+  },
+  "CURRENCY": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 2,
+      "categories": [
+        "VND",
+        "USD"
+      ]
+    },
+    "null_count": 0,
+    "sample_values": [
+      "VND",
+      "VND",
+      "VND",
+      "VND",
+      "VND"
+    ]
+  },
+  "CLOSE_BAL": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 898303000000.0,
+      "mean": 4235444747.1643,
+      "unique_values_count": 1079
+    },
+    "null_count": 0,
+    "sample_values": [
+      0.0,
+      0.0,
+      6125000000.0,
+      0.0,
+      2000000000.0
+    ]
+  },
+  "CLOSE_BAL_LCY": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 898303000000.0,
+      "mean": 4244556847.7643,
+      "unique_values_count": 1079
+    },
+    "null_count": 0,
+    "sample_values": [
+      1050000000.0,
+      120000000.0,
+      20000000000.0,
+      0.0,
+      0.0
+    ]
+  },
+  "AGG_BAL_MTD": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 22457575000000.0,
+      "mean": 101731325652.3369,
+      "unique_values_count": 1254
+    },
+    "null_count": 0,
+    "sample_values": [
+      50000000000.0,
+      0.0,
+      0.0,
+      920000000000.0,
+      0.0
+    ]
+  },
+  "AGG_BAL_MTD_LCY": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 22457575000000.0,
+      "mean": 98774398615.99599,
+      "unique_values_count": 1146
+    },
+    "null_count": 278,
+    "sample_values": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "AGG_BAL_YTD": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 90000000000000.0,
+      "mean": 347892620945.5418,
+      "unique_values_count": 1782
+    },
+    "null_count": 0,
+    "sample_values": [
+      0.0,
+      0.0,
+      36960000000.0,
+      144059068440.0,
+      0.0
+    ]
+  },
+  "AGG_BAL_YTD_LCY": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 75457452000000.0,
+      "mean": 306423045630.45776,
+      "unique_values_count": 1361
+    },
+    "null_count": 903,
+    "sample_values": [
+      420000000000.0,
+      104160000000.0,
+      0.0,
+      85228010952.0,
+      0.0
+    ]
+  },
+  "AGG_BAL": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 439200000000000.0,
+      "mean": 3694818481295.465,
+      "unique_values_count": 5172
+    },
+    "null_count": 0,
+    "sample_values": [
+      12089476767.0,
+      555000000000.0,
+      1054850000000.0,
+      66527958942.0,
+      46000000000.0
+    ]
+  },
+  "TOT_INTEREST_AMT": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 21355479452.0,
+      "mean": 6751286.845,
+      "unique_values_count": 53
+    },
+    "null_count": 0,
+    "sample_values": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "REVAL_RATE": {
+    "data_type": "integer",
+    "stats": {
+      "min": 1.0,
+      "max": 25640.0,
+      "mean": 26.639,
+      "unique_values_count": 2
+    },
+    "null_count": 0,
+    "sample_values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "INTEREST_RATE": {
+    "data_type": "float",
+    "stats": {
+      "min": 0.0,
+      "max": 12.0,
+      "mean": 4.9661547464239275,
+      "unique_values_count": 221
+    },
+    "null_count": 3,
+    "sample_values": [
+      4.6,
+      2.8,
+      5.0,
+      5.85,
+      5.05
+    ]
+  },
+  "ACCR_INT": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 59400000000.0,
+      "mean": 92269185.9,
+      "unique_values_count": 2274
+    },
+    "null_count": 0,
+    "sample_values": [
+      0.0,
+      30943356.0,
+      0.0,
+      0.0,
+      4293944.0
+    ]
+  },
+  "ACCR_REMAIN": {
+    "data_type": "integer",
+    "stats": {
+      "min": -250033974.0,
+      "max": 59432547945.0,
+      "mean": 361427737.57621527,
+      "unique_values_count": 6087
+    },
+    "null_count": 2,
+    "sample_values": [
+      3888889.0,
+      1521614.0,
+      2333333.0,
+      1763924.0,
+      719550000.0
+    ]
+  },
+  "REMAIN_TERM": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 61,
+      "top_categories": [
+        "D00",
+        "M02",
+        "M03",
+        "M05",
+        "M04",
+        "M06",
+        "M01",
+        "M09",
+        "M08",
+        "M10"
+      ]
+    },
+    "null_count": 3,
+    "sample_values": [
+      "D00",
+      "M09",
+      "D00",
+      "D23",
+      "M02"
+    ]
+  },
+  "WORKING_BALANCE": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 898303000000.0,
+      "mean": 4199100485.8493,
+      "unique_values_count": 1079
+    },
+    "null_count": 0,
+    "sample_values": [
+      0.0,
+      0.0,
+      3181162465.0,
+      0.0,
+      0.0
+    ]
+  },
+  "DATE_LAST_CR_CUST": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 890,
+      "top_categories": [
+        "2024-04-11",
+        "2023-12-29",
+        "2022-12-30",
+        "2024-02-06",
+        "2025-01-03",
+        "2024-12-31",
+        "2025-02-03",
+        "2024-07-23",
+        "2024-03-29",
+        "2025-03-14"
+      ]
+    },
+    "null_count": 390,
+    "sample_values": [
+      "2022-12-30",
+      "2024-03-12",
+      "2024-04-11",
+      "2024-11-20",
+      "2024-04-11"
+    ]
+  },
+  "DATE_LAST_DR_CUST": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 529,
+      "top_categories": [
+        "2025-02-03",
+        "2024-05-02",
+        "2024-02-15",
+        "2023-05-22",
+        "2024-03-06",
+        "2025-02-24",
+        "2025-01-20",
+        "2023-09-18",
+        "2024-07-29",
+        "2023-07-17"
+      ]
+    },
+    "null_count": 6837,
+    "sample_values": [
+      "2024-07-11",
+      "2024-05-22",
+      "2024-12-24",
+      "2024-05-02",
+      "2024-09-12"
+    ]
+  },
+  "DATE_LAST_CR_BANK": {
+    "data_type": "string",
+    "stats": {
+      "unique_values_count": 229,
+      "max_length": 10
+    },
+    "null_count": 9691,
+    "sample_values": [
+      "2021-01-15",
+      "2020-06-18",
+      "2019-08-26",
+      "2019-12-09",
+      "2020-07-09"
+    ]
+  },
+  "DATE_LAST_DR_BANK": {
+    "data_type": "string",
+    "stats": {
+      "unique_values_count": 1,
+      "max_length": 10
+    },
+    "null_count": 9999,
+    "sample_values": [
+      "2024-01-04"
+    ]
+  },
+  "DATE_LAST_CR_AUTO": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 540,
+      "top_categories": [
+        "2025-02-03",
+        "2025-03-24",
+        "2025-01-20",
+        "2023-10-30",
+        "2025-02-24",
+        "2024-11-25",
+        "2024-03-06",
+        "2023-11-20",
+        "2024-02-15",
+        "2024-02-19"
+      ]
+    },
+    "null_count": 6331,
+    "sample_values": [
+      "2024-02-15",
+      "2023-05-12",
+      "2023-12-19",
+      "2021-04-06",
+      "2024-07-15"
+    ]
+  },
+  "DATE_LAST_DR_AUTO": {
+    "data_type": "string",
+    "stats": {
+      "unique_values_count": 6,
+      "max_length": 10
+    },
+    "null_count": 9991,
+    "sample_values": [
+      "2023-10-16",
+      "2023-07-27",
+      "2024-10-01",
+      "2025-02-21",
+      "2024-10-31"
+    ]
+  },
+  "LIMIT_ID": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 32,
+      "top_categories": [
+        "15421440.0009900.01",
+        "16090963.0009900.01",
+        "123708.0009900.01",
+        "445118.0009900.01",
+        "192268.0009900.01",
+        "16274020.0009900.01",
+        "15654762.0009900.01",
+        "16340143.0009900.01",
+        "16661904.0009900.01",
+        "15738283.0009900.01"
+      ]
+    },
+    "null_count": 9919,
+    "sample_values": [
+      "15738283.0009900.01",
+      "16090963.0009900.01",
+      "67897979.0009900.01",
+      "13643004.0009900.01",
+      "38866666.0009900.01"
+    ]
+  },
+  "LINE_NO": {
+    "data_type": "integer",
+    "stats": {
+      "min": 3155.0,
+      "max": 3320.0,
+      "mean": 3161.7143001413856,
+      "unique_values_count": 4
+    },
+    "null_count": 98,
+    "sample_values": [
+      3160.0,
+      3160.0,
+      3160.0,
+      3160.0,
+      3160.0
+    ]
+  },
+  "CAMPAIGN_ID": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 15,
+      "top_categories": [
+        "SEAB.TG.TAILOC",
+        "CBD.2022.TG.PHATLOC",
+        "SEAB.UUDAI.LS",
+        "SEAB.TG.2017.2",
+        "CBD.TG.PHATLOC.2022",
+        "SEAB.TGDNL",
+        "SEAB.TG.2016.1",
+        "SEAB.TGDNL.2018",
+        "SEAB.TG.2017.1",
+        "SEAB.TAILOC.TG"
+      ]
+    },
+    "null_count": 4137,
+    "sample_values": [
+      "CBD.2022.TG.PHATLOC",
+      "CBD.2022.TG.PHATLOC",
+      "CBD.2022.TG.PHATLOC",
+      "CBD.2022.TG.PHATLOC",
+      "SEAB.TG.TAILOC"
+    ]
+  },
+  "SETLEMENT_AC": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 30,
+      "top_categories": [
+        "VND1142600090001",
+        "VND1142600050071",
+        "VND1142600050101",
+        "000008819508",
+        "000004921853",
+        "888003168888",
+        "000000627156",
+        "000000221107",
+        "000001211935",
+        "1020012204005"
+      ]
+    },
+    "null_count": 9919,
+    "sample_values": [
+      "888002606666",
+      "VND1142600050071",
+      "0020026818002",
+      "1020012204005",
+      "VND1142600090001"
+    ]
+  },
+  "CLOSE_REASON": {
+    "data_type": "integer",
+    "stats": {},
+    "null_count": 10000,
+    "sample_values": []
+  },
+  "TERM": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 30,
+      "top_categories": [
+        "M01",
+        "M06",
+        "M12",
+        "M03",
+        "M13",
+        "M02",
+        "M36",
+        "M24",
+        "M09",
+        "M07"
+      ]
+    },
+    "null_count": 3,
+    "sample_values": [
+      "M06",
+      "M01",
+      "M01",
+      "M12",
+      "M15"
+    ]
+  },
+  "TERM_SBV": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 23,
+      "top_categories": [
+        "M01",
+        "M06",
+        "M12",
+        "M03",
+        "M13",
+        "M02",
+        "M36",
+        "M24",
+        "M09",
+        "D07"
+      ]
+    },
+    "null_count": 3,
+    "sample_values": [
+      "M06",
+      "M01",
+      "M06",
+      "M01",
+      "M03"
+    ]
+  },
+  "ROLLOVER_TERM": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 88,
+      "top_categories": [
+        "0001M",
+        "0006M",
+        "0012M",
+        "001M",
+        "0003M",
+        "0013M",
+        "006M",
+        "012M",
+        ".",
+        "013M"
+      ]
+    },
+    "null_count": 4006,
+    "sample_values": [
+      "0024M",
+      "0006M",
+      "0001M",
+      "0001M",
+      "0001M"
+    ]
+  },
+  "ORIG_INTEREST_RATE": {
+    "data_type": "float",
+    "stats": {
+      "min": 0.0,
+      "max": 12.0,
+      "mean": 5.194720552642194,
+      "unique_values_count": 219
+    },
+    "null_count": 84,
+    "sample_values": [
+      6.3,
+      5.75,
+      5.5,
+      5.15,
+      5.45
+    ]
+  },
+  "OFFER_RATE": {
+    "data_type": "float",
+    "stats": {
+      "min": 0.0,
+      "max": 9.5,
+      "mean": 4.492998990918264,
+      "unique_values_count": 139
+    },
+    "null_count": 90,
+    "sample_values": [
+      7.1,
+      4.0,
+      5.9,
+      5.0,
+      4.2
+    ]
+  },
+  "FIRST_INTEREST": {
+    "data_type": "float",
+    "stats": {
+      "min": 0.0,
+      "max": 12.0,
+      "mean": 5.245959583833534,
+      "unique_values_count": 229
+    },
+    "null_count": 4,
+    "sample_values": [
+      4.0,
+      2.8,
+      3.25,
+      3.05,
+      3.05
+    ]
+  },
+  "FIRST_BALANCE": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 10500000000000.0,
+      "mean": 31174078173.108,
+      "unique_values_count": 2061
+    },
+    "null_count": 0,
+    "sample_values": [
+      5000000000,
+      5850000000,
+      20000000000,
+      100000000000,
+      500000000
+    ]
+  },
+  "AGG_BAL_INTEREST": {
+    "data_type": "float",
+    "stats": {
+      "min": 0.0,
+      "max": 520257000000000.0,
+      "mean": 317196935979.905,
+      "unique_values_count": 4388
+    },
+    "null_count": 82,
+    "sample_values": [
+      22000000000.0,
+      1840000000.0,
+      10800000000.0,
+      9100000000.0,
+      3520083291.2
+    ]
+  },
+  "INTEREST_BAL": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 107167511.0,
+      "mean": 24391.83839096683,
+      "unique_values_count": 6
+    },
+    "null_count": 81,
+    "sample_values": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "SEAB_SALES_TYPE": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 6,
+      "categories": [
+        "TELLER",
+        "CRO.SME",
+        "RM",
+        "CRO.IND",
+        "VCRO",
+        "CRO.IND.HO"
+      ]
+    },
+    "null_count": 830,
+    "sample_values": [
+      "TELLER",
+      "CRO.SME",
+      "TELLER",
+      "CRO.SME",
+      "CRO.SME"
+    ]
+  },
+  "SEAB_SALES_ID": {
+    "data_type": "integer",
+    "stats": {
+      "min": 7.0,
+      "max": 44128888.0,
+      "mean": 15300837.809705561,
+      "unique_values_count": 623
+    },
+    "null_count": 830,
+    "sample_values": [
+      16325300.0,
+      14529064.0,
+      15856779.0,
+      14024034.0,
+      15518813.0
+    ]
+  },
+  "SEAB_BROKERS_TYPE": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 4,
+      "categories": [
+        "NHANVIEN",
+        "KHACHHANG",
+        "CONGTACVIEN",
+        "KHACHHANGUYTIN"
+      ]
+    },
+    "null_count": 729,
+    "sample_values": [
+      "NHANVIEN",
+      "NHANVIEN",
+      "NHANVIEN",
+      "NHANVIEN",
+      "NHANVIEN"
+    ]
+  },
+  "SEAB_BROKERS_ID": {
+    "data_type": "integer",
+    "stats": {
+      "min": 7.0,
+      "max": 50000201.0,
+      "mean": 15223694.81199439,
+      "unique_values_count": 731
+    },
+    "null_count": 729,
+    "sample_values": [
+      14512752.0,
+      14940493.0,
+      14512752.0,
+      16325300.0,
+      193219.0
+    ]
+  },
+  "TOTAL_LOCKED_AMT": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 250000000000.0,
+      "mean": 324301700.5855429,
+      "unique_values_count": 348
+    },
+    "null_count": 81,
+    "sample_values": [
+      0.0,
+      0.0,
+      0.0,
+      200000000.0,
+      130000000.0
+    ]
+  },
+  "SEAB_LOS_ID": {
+    "data_type": "integer",
+    "stats": {},
+    "null_count": 10000,
+    "sample_values": []
+  },
+  "AC_TRANS_LIMIT_SK": {
+    "data_type": "integer",
+    "stats": {
+      "min": 2.0,
+      "max": 2.0,
+      "mean": 2.0,
+      "unique_values_count": 1
+    },
+    "null_count": 81,
+    "sample_values": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+    ]
+  },
+  "CUSTOMER_SK": {
+    "data_type": "integer",
+    "stats": {
+      "min": 8041162.0,
+      "max": 30418068.0,
+      "mean": 30002075.9519,
+      "unique_values_count": 1149
+    },
+    "null_count": 0,
+    "sample_values": [
+      29973258,
+      30216016,
+      30279191,
+      30100068,
+      30322870
+    ]
+  },
+  "CATEGORY_SK": {
+    "data_type": "integer",
+    "stats": {
+      "min": 98.0,
+      "max": 6764.0,
+      "mean": 1907.3308,
+      "unique_values_count": 17
+    },
+    "null_count": 0,
+    "sample_values": [
+      1647,
+      1647,
+      1647,
+      1647,
+      1647
+    ]
+  },
+  "PRODUCTS_SK": {
+    "data_type": "integer",
+    "stats": {
+      "min": 115931.0,
+      "max": 8754138.0,
+      "mean": 1565377.2053,
+      "unique_values_count": 24
+    },
+    "null_count": 0,
+    "sample_values": [
+      1391694,
+      1391694,
+      1391694,
+      1391694,
+      1391694
+    ]
+  },
+  "COMPANY_SK": {
+    "data_type": "integer",
+    "stats": {
+      "min": 158.0,
+      "max": 7684793.0,
+      "mean": 5774613.7273,
+      "unique_values_count": 99
+    },
+    "null_count": 0,
+    "sample_values": [
+      3987635,
+      6533123,
+      5693049,
+      7684693,
+      7684293
+    ]
+  },
+  "CURRENCY_SK": {
+    "data_type": "integer",
+    "stats": {
+      "min": 25066.0,
+      "max": 52598.0,
+      "mean": 25093.532,
+      "unique_values_count": 2
+    },
+    "null_count": 0,
+    "sample_values": [
+      25066,
+      25066,
+      25066,
+      25066,
+      25066
+    ]
+  },
+  "CHANNEL_SK": {
+    "data_type": "integer",
+    "stats": {
+      "min": 2.0,
+      "max": 965.0,
+      "mean": 45.542191753200925,
+      "unique_values_count": 5
+    },
+    "null_count": 81,
+    "sample_values": [
+      18.0,
+      18.0,
+      18.0,
+      18.0,
+      18.0
+    ]
+  },
+  "CONTRACT_SK": {
+    "data_type": "integer",
+    "stats": {
+      "min": 11278.0,
+      "max": 30477.0,
+      "mean": 20383.3414,
+      "unique_values_count": 10000
+    },
+    "null_count": 0,
+    "sample_values": [
+      27913,
+      19909,
+      11580,
+      27395,
+      14255
+    ]
+  },
+  "ONLINE_ACTUAL_BAL": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 898303000000.0,
+      "mean": 4199000485.8493,
+      "unique_values_count": 1079
+    },
+    "null_count": 0,
+    "sample_values": [
+      2500000000.0,
+      0.0,
+      0.0,
+      10000000.0,
+      0.0
+    ]
+  },
+  "SUB_CHANNEL_ID": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 2,
+      "categories": [
+        "LOS",
+        "SEAPORTAL"
+      ]
+    },
+    "null_count": 9721,
+    "sample_values": [
+      "LOS",
+      "LOS",
+      "LOS",
+      "LOS",
+      "SEAPORTAL"
+    ]
+  },
+  "FREQUENCY_DATE": {
+    "data_type": "string",
+    "stats": {
+      "unique_values_count": 105,
+      "max_length": 10
+    },
+    "null_count": 9834,
+    "sample_values": [
+      "2025-04-22",
+      "2025-03-02",
+      "2023-12-30",
+      "2023-05-13",
+      "2025-01-11"
+    ]
+  },
+  "FAVORITE_TERM": {
+    "data_type": "categorical",
+    "stats": {
+      "unique_values_count": 134,
+      "top_categories": [
+        "30",
+        "6",
+        "31",
+        "365",
+        "184",
+        "208",
+        "183",
+        "185",
+        "405",
+        "367"
+      ]
+    },
+    "null_count": 9576,
+    "sample_values": [
+      "30",
+      "32",
+      "208",
+      "208",
+      "6"
+    ]
+  },
+  "OPEN_ACTUAL_BAL": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 898303000000.0,
+      "mean": 4235694747.1643,
+      "unique_values_count": 1079
+    },
+    "null_count": 0,
+    "sample_values": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "ONLINE_CLEARED_BAL": {
+    "data_type": "integer",
+    "stats": {
+      "min": 0.0,
+      "max": 898303000000.0,
+      "mean": 4199000485.8493,
+      "unique_values_count": 1079
+    },
+    "null_count": 0,
+    "sample_values": [
+      0.0,
+      0.0,
+      10000000000.0,
+      0.0,
+      44000000.0
+    ]
+  }
+}
