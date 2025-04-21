@@ -3,8 +3,8 @@ import json
 import os
 import numpy as np
 from sdv.single_table import GaussianCopulaSynthesizer
-# Corrected imports for constraints based on SDV v1.x structure - Removed ColumnFormula
-from sdv.constraints.tabular import ScalarRange, Unique
+# Corrected imports for constraints - We will now work with dictionaries directly
+# from sdv.constraints.tabular import ScalarRange, Unique
 from sdv.metadata import SingleTableMetadata
 import random
 from faker import Faker
@@ -132,194 +132,114 @@ def detect_column_correlations(df):
     return correlations
 
 
-def create_sdv_metadata(df, enhanced_schema):
-    """Creates SDV metadata from the DataFrame and enhanced schema."""
-    try:
-        metadata = SingleTableMetadata()
-        # Detect initial metadata, including data types
-        metadata.detect_from_dataframe(data=df)
-        print("Initial metadata detected:")
-        # print(metadata.to_dict()) # Optional: print initial detection
-
-        primary_key = None
-
-        # Update metadata based on the enhanced schema
-        for col_name, col_schema in enhanced_schema.items():
-            if col_name not in df.columns:
-                print(f"Warning: Column '{col_name}' from schema not found in DataFrame. Skipping metadata update.")
-                continue
-
-            sdtype_override = None
-            datetime_format = None
-            pii_override = None
-
-            # --- Determine Primary Key ---
-            if col_schema.get("key_type", "").lower() == "primary key":
-                if primary_key is None:
-                    primary_key = col_name
-                    sdtype_override = 'id' # Set sdtype for primary key
-                    print(f"Setting primary key: '{primary_key}' with sdtype 'id'")
-                else:
-                    # Handle composite keys if necessary, though SDV single table often assumes one PK
-                    print(f"Warning: Multiple primary keys defined in schema ('{primary_key}', '{col_name}'). Using the first one found: '{primary_key}'.")
-
-            # --- Determine Data Type (sdtype) ---
-            data_type = col_schema.get("data_type", "").lower()
-            if data_type in ["numerical", "integer", "float"]:
-                # Check if pandas detected it differently and override if needed
-                current_sdtype = metadata.columns.get(col_name, {}).get('sdtype')
-                if current_sdtype not in ['numerical', 'float', 'integer']:
-                     print(f"Overriding sdtype for '{col_name}' from '{current_sdtype}' to 'numerical' based on schema.")
-                     sdtype_override = 'numerical'
-                # Example: Explicitly ensure specific columns are numerical if detection fails
-                # if col_name == 'INTEREST_BAL' and current_sdtype != 'numerical':
-                #     print(f"Explicitly setting sdtype for 'INTEREST_BAL' to 'numerical'.")
-                #     sdtype_override = 'numerical'
-
-            elif data_type == "categorical":
-                current_sdtype = metadata.columns.get(col_name, {}).get('sdtype')
-                if current_sdtype != 'categorical':
-                    print(f"Overriding sdtype for '{col_name}' from '{current_sdtype}' to 'categorical' based on schema.")
-                    sdtype_override = 'categorical'
-
-            elif data_type == "datetime":
-                sdtype_override = 'datetime'
-                # Get format from schema if available, otherwise use a default/detected one
-                datetime_format = col_schema.get("datetime_format", '%Y-%m-%d') # Default format
-                print(f"Setting sdtype for '{col_name}' to 'datetime' with format '{datetime_format}'.")
-
-            elif data_type == "boolean":
-                 current_sdtype = metadata.columns.get(col_name, {}).get('sdtype')
-                 if current_sdtype != 'boolean':
-                    print(f"Overriding sdtype for '{col_name}' from '{current_sdtype}' to 'boolean' based on schema.")
-                    sdtype_override = 'boolean'
-
-            elif data_type == "id":
-                 # Can be used for non-primary key identifiers
-                 current_sdtype = metadata.columns.get(col_name, {}).get('sdtype')
-                 if current_sdtype != 'id':
-                    print(f"Overriding sdtype for '{col_name}' from '{current_sdtype}' to 'id' based on schema.")
-                    sdtype_override = 'id'
-
-            # --- Check for PII ---
-            if col_schema.get("is_pii", False):
-                 pii_override = True
-                 print(f"Marking column '{col_name}' as PII.")
-
-
-            # --- Apply Updates to Metadata ---
-            update_params = {}
-            if sdtype_override:
-                update_params['sdtype'] = sdtype_override
-            if datetime_format:
-                update_params['datetime_format'] = datetime_format
-            if pii_override is not None: # Check for None explicitly
-                 update_params['pii'] = pii_override
-
-            if update_params:
-                try:
-                    metadata.update_column(column_name=col_name, **update_params)
-                    # print(f"Updated metadata for column '{col_name}': {update_params}")
-                except Exception as update_e:
-                    print(f"Error updating metadata for column '{col_name}' with params {update_params}: {update_e}")
-
-
-        # --- Set Primary Key after iterating through all columns ---
-        if primary_key:
-             try:
-                 metadata.set_primary_key(column_name=primary_key)
-                 print(f"Successfully set '{primary_key}' as the primary key in metadata.")
-             except Exception as pk_e:
-                 print(f"Error setting primary key '{primary_key}': {pk_e}")
-        else:
-            print("Warning: No primary key explicitly defined in the schema.")
-
-
-        print("\nFinal metadata after applying schema:")
-        print(metadata.to_dict()) # Print final metadata for verification
-        try:
-            metadata.validate() # Validate the final metadata
-            print("\nMetadata validation successful.")
-        except Exception as validate_e:
-             print(f"\nMetadata validation failed: {validate_e}")
-             # Decide if you want to proceed with potentially invalid metadata
-             # return None # Or raise error
-
-        return metadata
-
-    except Exception as e:
-        print(f"Error creating SDV metadata: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        # Fallback to basic detection if schema application fails
-        print("Falling back to basic metadata detection.")
-        metadata = SingleTableMetadata()
-        metadata.detect_from_dataframe(data=df)
-        try:
-            metadata.validate()
-        except Exception as validate_e:
-             print(f"Fallback metadata validation failed: {validate_e}")
-        return metadata
-
-
-# Helper function to check the available parameters for a class (remains useful)
-def get_param_names(cls):
-    """Gets the parameter names for a class constructor, skipping 'self'."""
-    try:
-        sig = inspect.signature(cls.__init__)
-        return list(sig.parameters.keys())[1:]  # Skip 'self'
-    except Exception as e:
-        print(f"Could not get parameters for {cls.__name__}: {str(e)}")
-        return []
-
-def parse_sdv_constraints(constraints_list, col_name, metadata, enhanced_schema):
+def prepare_sdv_metadata_components(df, enhanced_schema):
     """
-    Parses SDV constraints from the schema definition for a specific column.
-    Uses ScalarRange for single-bound constraints.
-    Skips ColumnFormula as it's not available in this SDV version path.
+    Prepares the components needed to create SDV metadata:
+    columns dictionary, constraints list (as dictionaries), and primary key.
+    """
+    columns_dict = {}
+    constraint_dicts = []
+    primary_key = None
+
+    # First pass: Detect initial metadata and identify primary key from schema
+    temp_metadata = SingleTableMetadata()
+    temp_metadata.detect_from_dataframe(data=df)
+    temp_metadata_dict = temp_metadata.to_dict() # Get initial detection as dict
+
+    # Populate columns dictionary based on detection and schema overrides
+    for col_name in df.columns:
+         columns_dict[col_name] = temp_metadata_dict['columns'].get(col_name, {}) # Start with detected info
+
+    # Second pass: Apply schema overrides and identify primary key
+    for col_name, col_schema in enhanced_schema.items():
+        if col_name not in columns_dict:
+            print(f"Warning: Column '{col_name}' from schema not found in DataFrame. Skipping metadata update.")
+            continue
+
+        # Apply schema overrides for sdtype, pii, etc.
+        data_type = col_schema.get("data_type", "").lower()
+        if data_type in ["numerical", "integer", "float"]:
+             columns_dict[col_name]['sdtype'] = 'numerical'
+        elif data_type == "categorical":
+             columns_dict[col_name]['sdtype'] = 'categorical'
+        elif data_type == "datetime":
+             columns_dict[col_name]['sdtype'] = 'datetime'
+             if "datetime_format" in col_schema:
+                 columns_dict[col_name]['datetime_format'] = col_schema["datetime_format"]
+        elif data_type == "boolean":
+             columns_dict[col_name]['sdtype'] = 'boolean'
+        elif data_type == "id":
+             columns_dict[col_name]['sdtype'] = 'id'
+
+        if col_schema.get("is_pii", False):
+             columns_dict[col_name]['pii'] = True
+
+        # Identify primary key from schema
+        if col_schema.get("key_type", "").lower() == "primary key":
+            if primary_key is None:
+                primary_key = col_name
+                print(f"Identified primary key from schema: '{primary_key}'")
+                # *** FIX: Ensure primary key column sdtype is 'id' ***
+                columns_dict[col_name]['sdtype'] = 'id' # Explicitly set sdtype to 'id'
+            else:
+                print(f"Warning: Multiple primary keys defined in schema ('{primary_key}', '{col_name}'). Using the first one found: '{primary_key}'.")
+
+    # Fallback to detected primary key if schema doesn't define one
+    if primary_key is None and 'primary_key' in temp_metadata_dict:
+         primary_key = temp_metadata_dict['primary_key']
+         print(f"Using detected primary key: '{primary_key}' (not defined in schema).")
+         # *** FIX: Ensure detected primary key column sdtype is 'id' ***
+         if primary_key in columns_dict:
+             columns_dict[primary_key]['sdtype'] = 'id' # Explicitly set detected PK sdtype to 'id'
+
+    elif primary_key is None:
+         print("Warning: No primary key defined in schema or detected from data.")
+
+
+    # Third pass: Parse and collect constraints as dictionaries
+    print("\nParsing constraints from enhanced schema...")
+    # Need primary key info during constraint parsing, so pass it
+    current_primary_key = primary_key # Use the identified primary key
+
+    for col_name, col_schema in enhanced_schema.items():
+        if col_name in df.columns and "sdv_constraints" in col_schema and col_schema["sdv_constraints"]:
+            print(f"   Parsing constraints for column: '{col_name}'")
+            col_constraint_dicts = parse_sdv_constraints_to_dict(
+                col_schema["sdv_constraints"],
+                col_name,
+                current_primary_key, # Pass the identified primary key
+                enhanced_schema
+            )
+            # Ensure col_constraint_dicts is a list before extending
+            if isinstance(col_constraint_dicts, list):
+                constraint_dicts.extend(col_constraint_dicts)
+                if col_constraint_dicts:
+                     print(f"   Added {len(col_constraint_dicts)} constraint dictionary(ies) for '{col_name}'.")
+            else:
+                print(f"   Warning: parse_sdv_constraints_to_dict for '{col_name}' did not return a list. Skipping constraints from this column.")
+
+    print(f"\nTotal constraint dictionaries collected: {len(constraint_dicts)}")
+
+    # Return the components needed for the metadata constructor
+    return columns_dict, constraint_dicts, primary_key
+
+
+def parse_sdv_constraints_to_dict(constraints_list, col_name, primary_key, enhanced_schema):
+    """
+    Parses SDV constraints from the schema definition for a specific column
+    and returns them as a list of constraint dictionaries in the format
+    expected by SDV metadata.
 
     Args:
         constraints_list (list): List of constraint definitions from the schema.
         col_name (str): The name of the column the constraints apply to.
-        metadata (SingleTableMetadata): The SDV metadata object (used to check PK).
+        primary_key (str or None): The name of the primary key column, if any.
         enhanced_schema (dict): The full schema dictionary (used for context if needed).
 
     Returns:
-        list: A list of instantiated SDV constraint objects.
+        list: A list of SDV constraint dictionaries.
     """
-    constraints = []
-    primary_key = metadata.primary_key
-
-    # Dynamically get parameter names for flexibility with SDV versions
-    # These classes are now imported from sdv.constraints.tabular
-    scalar_range_params = get_param_names(ScalarRange)
-    unique_params = get_param_names(Unique)
-    # Removed ColumnFormula params
-    # column_formula_params = get_param_names(ColumnFormula) # No longer needed
-
-    # Helper to find the most likely parameter name
-    def find_param(param_list, keywords):
-        if not param_list: return None # Handle case where get_param_names failed
-        for p in param_list:
-            if any(k in p.lower() for k in keywords):
-                return p
-        return None
-
-    # Find common parameter names dynamically
-    sr_col_param = find_param(scalar_range_params, ['column', 'col_name'])
-    sr_low_param = find_param(scalar_range_params, ['low', 'min'])
-    sr_high_param = find_param(scalar_range_params, ['high', 'max'])
-    # Add parameter for strict bounds if available in the version
-    sr_strict_low_param = find_param(scalar_range_params, ['strict_low', 'low_strict'])
-    sr_strict_high_param = find_param(scalar_range_params, ['strict_high', 'high_strict'])
-
-
-    unq_cols_param = find_param(unique_params, ['column', 'columns', 'col_names']) # Handles 'column_names' etc.
-
-    # Removed params related to ColumnFormula
-    # cf_col_param = find_param(column_formula_params, ['column', 'col_name'])
-    # cf_formula_param = find_param(column_formula_params, ['formula'])
-    # cf_handling_param = find_param(column_formula_params, ['handling', 'strategy'])
+    constraint_dicts = []
 
     for constraint_def in constraints_list:
         try:
@@ -338,23 +258,16 @@ def parse_sdv_constraints(constraints_list, col_name, metadata, enhanced_schema)
                 params = constraint_def # Use the dict directly for params
 
                 # --- Handle ScalarRange (covers range, greater than, less than) ---
-                # Use elif chain for clarity
                 if constraint_type in ["range", "scalar_range", "greater_than", "less_than", "min_only", "max_only"]:
-                    if not sr_col_param:
-                       print(f"Warning: Could not determine column param for ScalarRange on '{col_name}'. Skipping.")
-                       continue
-
                     min_val = params.get("min_value")
                     max_val = params.get("max_value")
                     strict_low = params.get("strict_low", False) # Default to inclusive
                     strict_high = params.get("strict_high", False) # Default to inclusive
 
-                    # Check if at least one bound is provided
                     if min_val is None and max_val is None:
                         print(f"Warning: ScalarRange constraint for '{col_name}' has neither min_value nor max_value. Skipping.")
                         continue
 
-                    # Ensure values are numeric or None
                     try:
                         min_val = float(min_val) if min_val is not None else None
                         max_val = float(max_val) if max_val is not None else None
@@ -362,60 +275,35 @@ def parse_sdv_constraints(constraints_list, col_name, metadata, enhanced_schema)
                         print(f"Warning: Invalid min/max value for ScalarRange on '{col_name}': min={min_val}, max={max_val}. Error: {e}. Skipping.")
                         continue
 
-                    # Check if column type is suitable
-                    col_sdtype = metadata.columns.get(col_name, {}).get('sdtype')
-                    if col_sdtype not in ['numerical', 'float', 'integer', 'datetime']:
-                         print(f"Warning: Applying ScalarRange to non-numeric/datetime column '{col_name}' (sdtype: {col_sdtype}). This might fail. Constraint: {params}")
-                         # continue # Optionally skip if type is wrong
-
-                    # Build kwargs dynamically, including strictness if supported
-                    kwargs = {
-                        sr_col_param: col_name,
-                    }
-                    # Only add bounds if they are not None
-                    if min_val is not None and sr_low_param:
-                        kwargs[sr_low_param] = min_val
-                        # Add strictness param if it exists and strict_low is True
-                        if strict_low and sr_strict_low_param:
-                            kwargs[sr_strict_low_param] = True
-                    if max_val is not None and sr_high_param:
-                         kwargs[sr_high_param] = max_val
-                         # Add strictness param if it exists and strict_high is True
-                         if strict_high and sr_strict_high_param:
-                             kwargs[sr_strict_high_param] = True
-
-                    # Check if kwargs has at least the column name and one bound parameter
-                    if len(kwargs) > 1:
-                        constraints.append(ScalarRange(**kwargs))
-                        print(f"Parsed ScalarRange constraint for '{col_name}': {kwargs}")
-                    else:
-                         print(f"Warning: Could not form valid ScalarRange kwargs for '{col_name}' (missing bound params?). Kwargs: {kwargs}. Skipping.")
+                    constraint_dicts.append({
+                        'constraint_class': 'ScalarRange',
+                        'constraint_parameters': {
+                            'column_name': col_name,
+                            'low': min_val,
+                            'high': max_val,
+                            'strict_low': strict_low, # Include strictness params
+                            'strict_high': strict_high
+                        }
+                    })
+                    print(f"Parsed ScalarRange constraint dict for '{col_name}'.")
 
 
                 # --- Handle Unique Constraint ---
                 elif constraint_type == "unique":
-                    if not unq_cols_param:
-                         print(f"Warning: Could not determine column param for Unique on '{col_name}'. Skipping.")
-                         continue
-                    # *** FIX: Check if column is already primary key ***
-                    # The error 'argument of type 'Unique' is not iterable' suggests that
-                    # sometimes a Unique object itself might be added directly to the constraints list
-                    # instead of being properly instantiated and added as an item in the list.
-                    # However, the current logic `constraints.append(Unique(**kwargs))` seems correct
-                    # for adding an instance to a list. The error might be happening during the
-                    # `add_constraints` call if the `constraints` list somehow gets corrupted
-                    # or if there's an internal SDV issue with how it processes the list.
-                    # Double-checking the primary key check is a good practice.
+                    # Check if column is already primary key - SDV handles PK uniqueness internally
                     if col_name == primary_key:
-                        print(f"Skipping Unique constraint for '{col_name}' as it is the primary key.")
+                        print(f"Skipping explicit Unique constraint for '{col_name}' as it is the primary key.")
                         continue
-                    kwargs = {unq_cols_param: [col_name]} # Unique takes a list of columns
-                    constraints.append(Unique(**kwargs))
-                    print(f"Parsed Unique constraint for '{col_name}': {kwargs}")
+                    constraint_dicts.append({
+                        'constraint_class': 'Unique',
+                        'constraint_parameters': {
+                            'column_names': [col_name] # Unique takes a list of columns
+                        }
+                    })
+                    print(f"Parsed Unique constraint dict for '{col_name}'.")
 
                 # --- Handle ColumnFormula Constraint (REMOVED) ---
                 elif constraint_type == "column_formula":
-                     # Warn that this constraint is unavailable and being skipped
                      print(f"Warning: Constraint type 'column_formula' for column '{col_name}' is not supported in this SDV setup and will be skipped.")
                      continue # Skip this constraint
 
@@ -426,32 +314,29 @@ def parse_sdv_constraints(constraints_list, col_name, metadata, enhanced_schema)
             # --- Handle String-based Constraints (Simple Cases) ---
             elif isinstance(constraint_def, str):
                 constraint_str = constraint_def.strip().lower() # Added strip() for safety
+
+                # --- Handle plain "Range" string specifically ---
+                if constraint_str == "range":
+                     print(f"Warning: Unsupported constraint string format 'Range' for column '{col_name}'. Expected format like 'range:min,max'. Skipping.")
+                     continue # Skip this specific unsupported format
+
                 if constraint_str == "unique":
-                    if not unq_cols_param:
-                         print(f"Warning: Could not determine column param for Unique on '{col_name}'. Skipping.")
-                         continue
-                    # *** FIX: Check if column is already primary key ***
+                    # Check if column is already primary key
                     if col_name == primary_key:
-                        print(f"Skipping Unique constraint for '{col_name}' as it is the primary key.")
+                        print(f"Skipping explicit Unique constraint for '{col_name}' as it is the primary key.")
                         continue
-                    kwargs = {unq_cols_param: [col_name]}
-                    constraints.append(Unique(**kwargs))
-                    print(f"Parsed Unique constraint for '{col_name}' from string.")
+                    constraint_dicts.append({
+                        'constraint_class': 'Unique',
+                        'constraint_parameters': {
+                            'column_names': [col_name]
+                        }
+                    })
+                    print(f"Parsed Unique constraint dict for '{col_name}' from string.")
 
                 # Example for range string: "range:0,100", "scalar_range:10,None", "range:None,50"
-                # Added handling for plain "range" or "scalar_range" without colon
-                elif constraint_str.startswith("range:") or constraint_str.startswith("scalar_range:") or constraint_str in ["range", "scalar_range"]:
-                     if not sr_col_param:
-                       print(f"Warning: Could not determine column param for ScalarRange on '{col_name}'. Skipping.")
-                       continue
+                elif constraint_str.startswith("range:") or constraint_str.startswith("scalar_range:"):
                      try:
-                         # Handle cases with and without colon
-                         if ':' in constraint_str:
-                             parts_str = constraint_str.split(':', 1)[1] # Split only once
-                         else:
-                             # If no colon, assume no bounds provided in string, which is likely an error
-                             # but we can attempt to parse if parts_str is empty
-                             parts_str = ""
+                         parts_str = constraint_str.split(':', 1)[1] # Split only once
 
                          min_val = None
                          max_val = None
@@ -463,34 +348,26 @@ def parse_sdv_constraints(constraints_list, col_name, metadata, enhanced_schema)
                                  max_str = parts[1].strip().lower()
                                  min_val = float(min_str) if min_str != 'none' and min_str else None # Also check for empty string
                                  max_val = float(max_str) if max_str != 'none' and max_str else None
-                             elif len(parts) == 1:
-                                 # Handle single value cases if needed, e.g., "range:10" (min only)
-                                 # For now, assume two values separated by comma
-                                 print(f"Warning: Range string '{constraint_def}' for '{col_name}' has unexpected format (expected 2 comma-separated values). Skipping.")
-                                 continue
                              else:
                                  print(f"Warning: Range string '{constraint_def}' for '{col_name}' has unexpected format. Skipping.")
                                  continue
-
 
                          if min_val is None and max_val is None:
                              print(f"Warning: Range string '{constraint_def}' for '{col_name}' has no valid bounds. Skipping.")
                              continue
 
-                         col_sdtype = metadata.columns.get(col_name, {}).get('sdtype')
-                         if col_sdtype not in ['numerical', 'float', 'integer', 'datetime']:
-                              print(f"Warning: Applying ScalarRange (from string) to non-numeric/datetime column '{col_name}' (sdtype: {col_sdtype}). This might fail.")
-
-                         kwargs = { sr_col_param: col_name }
-                         if min_val is not None and sr_low_param: kwargs[sr_low_param] = min_val
-                         if max_val is not None and sr_high_param: kwargs[sr_high_param] = max_val
-                         # Note: String format doesn't easily support strict bounds, defaulting to inclusive
-
-                         if len(kwargs) > 1:
-                             constraints.append(ScalarRange(**kwargs))
-                             print(f"Parsed ScalarRange constraint for '{col_name}' from string: {kwargs}")
-                         else:
-                             print(f"Warning: Could not form valid ScalarRange kwargs for '{col_name}' from string (missing bound params?). Skipping.")
+                         constraint_dicts.append({
+                            'constraint_class': 'ScalarRange',
+                            'constraint_parameters': {
+                                'column_name': col_name,
+                                'low': min_val,
+                                'high': max_val,
+                                # String format doesn't easily support strict bounds, defaulting to inclusive
+                                'strict_low': False,
+                                'strict_high': False
+                            }
+                        })
+                         print(f"Parsed ScalarRange constraint dict for '{col_name}' from string.")
 
                      except Exception as parse_e:
                          print(f"Error parsing range string '{constraint_def}' for column '{col_name}': {parse_e}. Skipping.")
@@ -506,7 +383,7 @@ def parse_sdv_constraints(constraints_list, col_name, metadata, enhanced_schema)
             import traceback
             traceback.print_exc() # Print detailed traceback for parsing errors
 
-    return constraints
+    return constraint_dicts
 
 
 def generate_weighted_random_element(categories):
@@ -567,67 +444,164 @@ def generate_synthetic_data_with_sdv(df, enhanced_schema, num_rows, output_file)
     """Generates synthetic data using SDV, applying Faker providers and post-processing."""
     try:
         print("\n--- Starting SDV Synthetic Data Generation ---")
-        print("1. Creating SDV metadata from DataFrame and enhanced schema...")
-        metadata = create_sdv_metadata(df, enhanced_schema)
-        if not metadata:
-            print("Error: Failed to create metadata. Aborting.")
-            return False
 
-        print("\n2. Parsing constraints from enhanced schema...")
-        constraints = []
+        print("1. Creating initial SingleTableMetadata object and detecting from dataframe...")
+        # Create an empty metadata object and detect from the dataframe
+        metadata = SingleTableMetadata()
+        metadata.detect_from_dataframe(data=df)
+        print("   Initial metadata detected from dataframe.")
+        print(f"   Detected primary key: {metadata.primary_key}")
+
+
+        print("\n2. Applying schema overrides to metadata and identifying primary key...")
+        # Apply schema overrides (sdtypes, pii) and identify primary key from schema
+        primary_key_from_schema = None
+        for col_name, col_schema in enhanced_schema.items():
+            if col_name in metadata.columns:
+                update_params = {}
+                data_type = col_schema.get("data_type", "").lower()
+                if data_type in ["numerical", "integer", "float"]:
+                     update_params['sdtype'] = 'numerical'
+                elif data_type == "categorical":
+                     update_params['sdtype'] = 'categorical'
+                elif data_type == "datetime":
+                     update_params['sdtype'] = 'datetime'
+                     if "datetime_format" in col_schema:
+                         update_params['datetime_format'] = col_schema["datetime_format"]
+                elif data_type == "boolean":
+                     update_params['sdtype'] = 'boolean'
+                elif data_type == "id":
+                     update_params['sdtype'] = 'id'
+
+                if col_schema.get("is_pii", False):
+                     update_params['pii'] = True
+
+                if update_params:
+                    try:
+                        metadata.update_column(column_name=col_name, **update_params)
+                        # print(f"Updated metadata for column '{col_name}': {update_params}")
+                    except Exception as update_e:
+                        print(f"Error updating metadata for column '{col_name}' with params {update_params}: {update_e}")
+
+                # Identify primary key from schema during this pass
+                if col_schema.get("key_type", "").lower() == "primary key":
+                    if primary_key_from_schema is None:
+                        primary_key_from_schema = col_name
+                        print(f"Identified primary key from schema: '{primary_key_from_schema}'")
+                        # *** FIX: Ensure primary key column sdtype is 'id' ***
+                        # We update the metadata object directly here after identifying the PK
+                        try:
+                            metadata.update_column(column_name=col_name, sdtype='id')
+                            print(f"   Set sdtype of primary key '{col_name}' to 'id'.")
+                        except Exception as sdtype_update_e:
+                            print(f"   Error setting sdtype of primary key '{col_name}' to 'id': {sdtype_update_e}")
+
+
+                    else:
+                        print(f"Warning: Multiple primary keys defined in schema ('{primary_key_from_schema}', '{col_name}'). Using the first one found: '{primary_key_from_schema}'.")
+
+        # Set primary key in the metadata object after iterating through schema
+        if primary_key_from_schema:
+             try:
+                 metadata.set_primary_key(primary_key_from_schema)
+                 print(f"   Set primary key in metadata object: {metadata.primary_key}")
+             except Exception as set_pk_e:
+                 print(f"   Error setting primary key '{primary_key_from_schema}' in metadata object: {set_pk_e}")
+                 # The InvalidMetadataError might still occur here if sdtype wasn't set correctly
+
+        elif metadata.primary_key:
+             print(f"   Using detected primary key: {metadata.primary_key} (not defined in schema)")
+             # Ensure detected primary key sdtype is 'id' if it wasn't already
+             if metadata.primary_key in metadata.columns and metadata.columns[metadata.primary_key].get('sdtype') != 'id':
+                 try:
+                     metadata.update_column(column_name=metadata.primary_key, sdtype='id')
+                     print(f"   Set sdtype of detected primary key '{metadata.primary_key}' to 'id'.")
+                 except Exception as sdtype_update_e:
+                      print(f"   Error setting sdtype of detected primary key '{metadata.primary_key}' to 'id': {sdtype_update_e}")
+        else:
+             print("   Warning: No primary key defined in schema or detected.")
+
+
+        # After applying schema overrides and setting PK, validate metadata
+        try:
+            metadata.validate() # Validate metadata after schema overrides and PK setting
+            print("\nMetadata validation successful after schema overrides and PK setting.")
+        except Exception as validate_e:
+             print(f"\nMetadata validation failed after schema overrides and PK setting: {validate_e}")
+             # The InvalidMetadataError is likely caught here
+
+
+        print("\n3. Parsing constraints from enhanced schema (to dictionaries)...") # Step number updated
+        # Need primary key info during constraint parsing, so pass it from the metadata object
+        current_primary_key = metadata.primary_key
+
+        constraint_dicts = []
         for col_name, col_schema in enhanced_schema.items():
             if col_name in df.columns and "sdv_constraints" in col_schema and col_schema["sdv_constraints"]:
                 print(f"   Parsing constraints for column: '{col_name}'")
-                col_constraints = parse_sdv_constraints(
+                col_constraint_dicts = parse_sdv_constraints_to_dict(
                     col_schema["sdv_constraints"],
                     col_name,
-                    metadata, # Pass metadata to check primary key
+                    current_primary_key, # Pass the primary key from the metadata object
                     enhanced_schema
                 )
-                # Ensure col_constraints is a list before extending
-                if isinstance(col_constraints, list):
-                    constraints.extend(col_constraints)
-                    if col_constraints:
-                         print(f"   Added {len(col_constraints)} constraint(s) for '{col_name}'.")
+                # Ensure col_constraint_dicts is a list before extending
+                if isinstance(col_constraint_dicts, list):
+                    constraint_dicts.extend(col_constraint_dicts)
+                    if col_constraint_dicts:
+                         print(f"   Added {len(col_constraint_dicts)} constraint dictionary(ies) for '{col_name}'.")
                 else:
-                    print(f"   Warning: parse_sdv_constraints for '{col_name}' did not return a list. Skipping constraints from this column.")
+                    print(f"   Warning: parse_sdv_constraints_to_dict for '{col_name}' did not return a list. Skipping constraints from this column.")
+
+        print(f"\nTotal constraint dictionaries collected: {len(constraint_dicts)}")
 
 
-        print(f"\nTotal constraints parsed: {len(constraints)}")
-        # print("Constraints objects:", constraints) # Optional: print constraint objects
+        print("\n4. Adding constraints to the metadata object...") # Step number updated
+        try:
+            if constraint_dicts:
+                # Iterate through constraint dictionaries and try adding them
+                # Assuming metadata.add_constraint accepts a constraint dictionary in this version
+                constraints_added_count = 0
+                for constraint_dict in constraint_dicts:
+                    try:
+                        # Attempt to add constraint using the dictionary format
+                        # This is the crucial point to test if add_constraint accepts dicts
+                        metadata.add_constraint(constraint_dict)
+                        constraints_added_count += 1
+                        print(f"   Successfully added constraint: {constraint_dict.get('constraint_class')}")
+                    except Exception as add_c_e:
+                        print(f"   Error adding constraint {constraint_dict.get('constraint_class')}: {add_c_e}")
+                        import traceback
+                        traceback.print_exc()
 
-        print("\n3. Setting up SDV synthesizer (GaussianCopulaSynthesizer)...")
-        # Initialize synthesizer with metadata ONLY. Constraints added before fitting.
+                print(f"   Attempted to add {len(constraint_dicts)} constraints, {constraints_added_count} added successfully.")
+            else:
+                print("   No constraints to add to metadata.")
+
+            print("\nFinal metadata after applying schema and constraints:")
+            print(metadata.to_dict()) # Print final metadata for verification
+            try:
+                metadata.validate() # Validate the final metadata
+                print("\nMetadata validation successful.")
+            except Exception as validate_e:
+                 print(f"\nMetadata validation failed after adding constraints: {validate_e}")
+                 # Decide if you want to proceed with potentially invalid metadata
+                 # return False # Or raise error
+
+
+        except Exception as meta_constraint_e:
+            print(f"   Error adding parsed constraints to metadata: {meta_constraint_e}")
+            import traceback
+            traceback.print_exc()
+            print("   Proceeding without adding all parsed constraints due to error.")
+
+
+        print("\n5. Setting up SDV synthesizer (GaussianCopulaSynthesizer)...") # Step number updated
+        # Initialize synthesizer with the metadata object
         synthesizer = GaussianCopulaSynthesizer(metadata=metadata)
 
-        # *** FIX: Add constraints BEFORE fitting ***
-        if constraints:
-            print("\n4. Adding constraints to the synthesizer...")
-            try:
-                # Suppress specific UserWarnings during constraint addition if desired
-                with warnings.catch_warnings():
-                    # Example: Ignore warnings about constraint validation if they are noisy
-                    # warnings.filterwarnings('ignore', category=UserWarning, module='sdv')
-                    # Ensure constraints is a list when passed
-                    synthesizer.add_constraints(constraints=constraints)
-                print(f"   Successfully added {len(constraints)} constraints.")
-            except Exception as constraint_e:
-                # Provide more context on constraint addition errors
-                print(f"   Error adding constraints: {constraint_e}")
-                # This error 'argument of type 'Unique' is not iterable' strongly suggests
-                # that the `constraints` variable passed to `add_constraints` was not a list
-                # or contained a non-iterable item where an iterable was expected.
-                # Printing the types of items in the list might help diagnose.
-                print(f"   Types of items in constraints list: {[type(c).__name__ for c in constraints]}")
-                print(f"   Problematic constraints might be among: {[type(c).__name__ for c in constraints]}") # Keep this line for consistency
-                import traceback
-                traceback.print_exc()
-                print("   Proceeding without adding constraints due to error.")
-                # Optionally: Decide whether to proceed or stop if constraints are critical
-                # return False
 
-
-        print("\n5. Fitting synthesizer to the original data...")
+        print("\n6. Fitting synthesizer to the original data...") # Step number updated
         try:
              # Suppress warnings during fitting if needed
              with warnings.catch_warnings():
@@ -643,7 +617,7 @@ def generate_synthetic_data_with_sdv(df, enhanced_schema, num_rows, output_file)
             return False
 
 
-        print(f"\n6. Generating {num_rows} rows of synthetic data...")
+        print(f"\n7. Generating {num_rows} rows of synthetic data...") # Step number updated
         try:
             # Suppress warnings during sampling if needed
             with warnings.catch_warnings():
@@ -658,7 +632,7 @@ def generate_synthetic_data_with_sdv(df, enhanced_schema, num_rows, output_file)
             return False
 
         # --- Post-processing Steps ---
-        print("\n7. Applying post-processing (Faker, categorical distributions, functions)...")
+        print("\n8. Applying post-processing (Faker, categorical distributions, functions)...") # Step number updated
 
         # Handle categorical columns with preserved probability distribution FIRST
         print("   Applying preserved categorical distributions...")
@@ -701,7 +675,7 @@ def generate_synthetic_data_with_sdv(df, enhanced_schema, num_rows, output_file)
                 if faker_provider == "random_element" and "elements" in faker_args:
                     elements = faker_args.get("elements", [])
                     if elements and isinstance(elements, list):
-                         # Use .loc for assignment
+                         # Use .loc to avoid SettingWithCopyWarning if synthetic_data is a slice
                          synthetic_data.loc[:, col_name] = synthetic_data[col_name].apply(
                              lambda _: random.choice(elements)
                          )
@@ -713,7 +687,7 @@ def generate_synthetic_data_with_sdv(df, enhanced_schema, num_rows, output_file)
                 # General Faker provider handling
                 try:
                     faker_method = getattr(fake, faker_provider)
-                    # Use .loc for assignment
+                    # Use .loc to avoid SettingWithCopyWarning if synthetic_data is a slice
                     synthetic_data.loc[:, col_name] = synthetic_data[col_name].apply(
                         lambda _: faker_method(**faker_args)
                     )
@@ -723,99 +697,7 @@ def generate_synthetic_data_with_sdv(df, enhanced_schema, num_rows, output_file)
                     print(f"       Error applying Faker provider '{faker_provider}' to '{col_name}': {str(e)}")
 
 
-        # Apply other post-processing functions
-        print("   Applying custom post-processing functions...")
-        for col_name, col_schema in enhanced_schema.items():
-            if col_name not in synthetic_data.columns: continue
-
-            post_processing = col_schema.get("post_processing")
-            if post_processing:
-                print(f"     - Applying post-processing '{post_processing}' to column '{col_name}'")
-                try:
-                    # Use .loc for assignment
-                    if post_processing == "format_as_currency":
-                        # Ensure the column is numeric before formatting
-                        synthetic_data[col_name] = pd.to_numeric(synthetic_data[col_name], errors='coerce')
-                        synthetic_data.loc[:, col_name] = synthetic_data[col_name].apply(
-                            lambda x: f"{float(x):,.2f} VND" if pd.notna(x) else None # Handle NaN
-                        )
-                    elif post_processing == "ensure_valid_id":
-                         # Attempt to extract digits, then format. Generate random if fails.
-                         def format_id(x):
-                             if pd.isna(x):
-                                 return f"ID{random.randint(10000000, 99999999):08d}"
-                             try:
-                                 # Try converting directly first if it's already numeric
-                                 if isinstance(x, (int, float)):
-                                     return f"ID{int(abs(x)):08d}"
-                                 # If string, extract digits
-                                 digits = ''.join(filter(str.isdigit, str(x)))
-                                 if digits:
-                                     return f"ID{int(digits):08d}"
-                                 else: # If no digits found in string
-                                     return f"ID{random.randint(10000000, 99999999):08d}"
-                             except (ValueError, TypeError): # Catch potential errors during conversion
-                                 return f"ID{random.randint(10000000, 99999999):08d}"
-                         synthetic_data.loc[:, col_name] = synthetic_data[col_name].apply(format_id)
-
-                    elif post_processing == "format_percentage":
-                        synthetic_data[col_name] = pd.to_numeric(synthetic_data[col_name], errors='coerce')
-                        synthetic_data.loc[:, col_name] = synthetic_data[col_name].apply(
-                            lambda x: f"{float(x):.2f}%" if pd.notna(x) else None
-                        )
-                    elif post_processing == "format_date":
-                        # Ensure column is datetime before formatting
-                        synthetic_data[col_name] = pd.to_datetime(synthetic_data[col_name], errors='coerce')
-                        date_format = col_schema.get("datetime_format", "%Y-%m-%d") # Use format from schema if available
-                        synthetic_data.loc[:, col_name] = synthetic_data[col_name].apply(
-                            lambda x: x.strftime(date_format) if pd.notna(x) else None
-                        )
-                    # Add more custom functions here
-                    # elif post_processing == "some_other_function":
-                    #     synthetic_data.loc[:, col_name] = synthetic_data[col_name].apply(my_custom_func)
-
-                except Exception as post_e:
-                    print(f"       Error during post-processing '{post_processing}' for '{col_name}': {post_e}")
-
-
-        # Apply functional dependencies (consider if SDV constraints handle this sufficiently)
-        # This manual step might conflict with SDV's learned dependencies. Use with caution.
-        apply_manual_dependencies = False # Set to True to enable manual override
-        if apply_manual_dependencies:
-            print("   Applying functional dependencies manually (use with caution)...")
-            original_correlations = detect_column_correlations(df) # Re-detect on original df if needed
-            for source_col, dependencies in original_correlations.items():
-                 if source_col not in synthetic_data.columns: continue
-                 for dep in dependencies:
-                     if dep.get("type") == "functional_dependency":
-                         target_col = dep["column"]
-                         if target_col not in synthetic_data.columns: continue
-
-                         print(f"     - Applying functional dependency: {source_col} -> {target_col}")
-                         # Create mapping from original data (handle NaN and potential duplicates)
-                         # Keep the first occurrence in case of duplicates in source_col
-                         mapping = df.dropna(subset=[source_col, target_col]).drop_duplicates(subset=[source_col], keep='first').set_index(source_col)[target_col].to_dict()
-
-                         if mapping:
-                             # Apply mapping to synthetic data, handle missing keys
-                             synthetic_data.loc[:, target_col] = synthetic_data[source_col].map(mapping)
-                             # Optionally, fill NaNs created by mapping (e.g., with mode or another strategy)
-                             missing_count = synthetic_data[target_col].isna().sum()
-                             if missing_count > 0:
-                                 print(f"       {missing_count} values in '{target_col}' became NaN after mapping '{source_col}' -> '{target_col}'. Consider a fill strategy if needed.")
-                                 # Example: Fill with mode from original target column
-                                 # try:
-                                 #     target_mode = df[target_col].mode()[0]
-                                 #     synthetic_data[target_col].fillna(target_mode, inplace=True)
-                                 # except IndexError: # Handle empty mode case
-                                 #      print(f"       Could not determine mode for '{target_col}' to fill NaNs.")
-
-
-                         else:
-                             print(f"       Warning: Could not create mapping for dependency {source_col} -> {target_col}.")
-
-
-        print("\n8. Comparing correlations between original and synthetic data...")
+        print("\n9. Comparing correlations between original and synthetic data...") # Step number updated
         # Ensure synthetic data columns used for correlation are numeric
         try:
             # Select columns that are likely numeric based on original data's numeric columns
@@ -854,7 +736,7 @@ def generate_synthetic_data_with_sdv(df, enhanced_schema, num_rows, output_file)
             print(f"   Error during correlation comparison step: {corr_e}")
 
 
-        print(f"\n9. Saving final synthetic data to {output_file}...")
+        print(f"\n10. Saving final synthetic data to {output_file}...") # Step number updated
         synthetic_data.to_csv(output_file, index=False, encoding='utf-8') # Specify encoding
         print(f"   Successfully generated and saved {len(synthetic_data)} rows of synthetic data!")
         print("\n--- Synthetic Data Generation Finished ---")
